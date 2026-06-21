@@ -28,14 +28,20 @@ jobs:
 
       - run: npm ci
 
+      - run: npm run typecheck
+
+      - run: npm run smoke
+
       - run: npm run render -- --scene torusknot --frames 24 --fps 12 --bg "#0d1117" --color "#39d353" --out assets/torusknot.svg
 
       - run: npm run render -- --scene icosahedron --frames 24 --fps 12 --bg "#0d1117" --color "#58a6ff" --out assets/icosahedron.svg
 
       - run: npm run render -- --scene torus --frames 24 --fps 12 --bg "#0d1117" --color "#f778ba" --out assets/torus.svg
 
+      - run: npm run update-readme
+
       # Artifacts are deterministic (same input -> same output), so when there's no diff nothing is committed or re-triggered.
       - uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "chore: regenerate scene SVGs"
-          file_pattern: assets/*.svg
+          file_pattern: "assets/*.svg README.md"

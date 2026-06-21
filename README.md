@@ -5,12 +5,12 @@ A CLI / GitHub Action that bakes Three.js scenes into animated SVGs (SMIL) for e
 ## Demo
 
 <p>
-  <img width="32%" alt="torusknot" src="./assets/torusknot.svg?v=1">
-  <img width="32%" alt="icosahedron" src="./assets/icosahedron.svg?v=1">
-  <img width="32%" alt="torus" src="./assets/torus.svg?v=1">
+  <img width="32%" alt="torusknot" src="./assets/torusknot.svg?v=56e0acf3">
+  <img width="32%" alt="icosahedron" src="./assets/icosahedron.svg?v=c242b575">
+  <img width="32%" alt="torus" src="./assets/torus.svg?v=cba3d85c">
 </p>
 
-The `assets/*.svg` files don't exist until the GitHub Action runs for the first time. The `?v=N` query is for camo cache-busting — bump `N` when you want SVG updates to show up (see [Embedding in a README](#embedding-in-a-readme)).
+The `assets/*.svg` files don't exist until the GitHub Action runs for the first time. The `?v=<hash>` query is for camo cache-busting and is maintained automatically — the workflow rewrites it to the SVG's content hash, so it changes only when the image changes (see [Embedding in a README](#embedding-in-a-readme)).
 
 ## How it works
 
@@ -64,7 +64,7 @@ Use a relative path with a cache-busting query.
 ![](./assets/torusknot.svg?v=1)
 ```
 
-GitHub serves SVGs through its camo proxy with aggressive caching. When you want an SVG update to show up in your README, bump `N` in `?v=N`.
+GitHub serves SVGs through its camo proxy with aggressive caching. The `render` workflow runs `npm run update-readme` after rendering, which rewrites the `?v=` token on each demo `<img>` to a hash of the SVG's bytes — so the cache is busted exactly when (and only when) the image changes, with no manual bumping. The literal `?v=1` above is just a placeholder for the example.
 
 ## Constraints
 
