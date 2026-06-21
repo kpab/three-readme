@@ -4,7 +4,7 @@ export const torusknot: SceneFactory = (params, ctx) => {
   const { THREE, width, height } = ctx;
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 100);
-  camera.position.z = 3.5;
+  camera.position.z = 8;
 
   const geometry = new THREE.TorusKnotGeometry(1, 0.3, 32, 5, 2, 3);
   const color = typeof params.color === "string" ? params.color : "#ffffff";

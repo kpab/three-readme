@@ -49,12 +49,12 @@ export function encodeFlipbook(
   ).join(";");
   const background = opts.background?.toLowerCase();
   const parts = [
-    `<svg xmlns="http://www.w3.org/2000/svg" width="${opts.width}" height="${opts.height}" viewBox="0 0 ${opts.width} ${opts.height}">`,
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${opts.width}" height="${opts.height}" viewBox="${-opts.width / 2} ${-opts.height / 2} ${opts.width} ${opts.height}">`,
   ];
 
   if (opts.background && background !== "none" && background !== "transparent") {
     parts.push(
-      `<rect width="${opts.width}" height="${opts.height}" fill="${escapeAttribute(opts.background)}"/>`,
+      `<rect x="${-opts.width / 2}" y="${-opts.height / 2}" width="${opts.width}" height="${opts.height}" fill="${escapeAttribute(opts.background)}"/>`,
     );
   }
 
