@@ -298,6 +298,37 @@
   footer a { color: var(--muted); }
   footer a:hover { color: var(--cyan); }
 
+  /* ---- motion: plotter-style reveals ---- */
+  @keyframes draw-in {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  /* hero draws itself in on load, like a plotter laying down lines */
+  .hero-grid > div > * { animation: draw-in .7s cubic-bezier(.2,.7,.2,1) both; }
+  .hero-grid .kicker   { animation-delay: .05s; }
+  .hero-grid h1        { animation-delay: .14s; }
+  .hero-grid .tagline  { animation-delay: .26s; }
+  .hero-grid .specline { animation-delay: .36s; }
+  .hero-grid .cta      { animation-delay: .46s; }
+  .hero-view { animation: draw-in .9s cubic-bezier(.2,.7,.2,1) both; animation-delay: .3s; }
+
+  /* scroll-triggered reveal for sections/plates */
+  .reveal { opacity: 0; transform: translateY(16px); }
+  .reveal.in { animation: draw-in .65s cubic-bezier(.2,.7,.2,1) forwards; }
+  .gallery .reveal.in:nth-child(1) { animation-delay: .00s; }
+  .gallery .reveal.in:nth-child(2) { animation-delay: .06s; }
+  .gallery .reveal.in:nth-child(3) { animation-delay: .12s; }
+  .gallery .reveal.in:nth-child(4) { animation-delay: .18s; }
+  .gallery .reveal.in:nth-child(5) { animation-delay: .24s; }
+  .gallery .reveal.in:nth-child(6) { animation-delay: .30s; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero-grid > div > *, .hero-view { animation: none; }
+    .reveal { opacity: 1; transform: none; }
+    .reveal.in { animation: none; }
+    html { scroll-behavior: auto; }
+  }
+
   /* ---- responsive ---- */
   @media (max-width: 760px) {
     .hero-grid { grid-template-columns: 1fr; gap: 36px; }
@@ -355,32 +386,32 @@
       </div>
     </div>
     <div class="gallery" id="gallery-grid" data-canvas="dark">
-      <a class="plate framed" href="https://raw.githubusercontent.com/kpab/three-readme/main/assets/crystal.svg" target="_blank" rel="noopener">
+      <a class="plate framed reveal" href="https://raw.githubusercontent.com/kpab/three-readme/main/assets/crystal.svg" target="_blank" rel="noopener">
         <div class="corners"><span></span><span></span><span></span><span></span></div>
         <div class="screen"><img alt="crystal" src="https://raw.githubusercontent.com/kpab/three-readme/main/assets/crystal.svg"></div>
         <div class="meta"><span class="nm">crystal</span><span class="fig">FIG.01</span></div>
       </a>
-      <a class="plate framed" href="https://raw.githubusercontent.com/kpab/three-readme/main/assets/text.svg" target="_blank" rel="noopener">
+      <a class="plate framed reveal" href="https://raw.githubusercontent.com/kpab/three-readme/main/assets/text.svg" target="_blank" rel="noopener">
         <div class="corners"><span></span><span></span><span></span><span></span></div>
         <div class="screen"><img alt="text" src="https://raw.githubusercontent.com/kpab/three-readme/main/assets/text.svg"></div>
         <div class="meta"><span class="nm">text <span class="flag">--text</span></span><span class="fig">FIG.02</span></div>
       </a>
-      <a class="plate framed" href="https://raw.githubusercontent.com/kpab/three-readme/main/assets/torusknot.svg" target="_blank" rel="noopener">
+      <a class="plate framed reveal" href="https://raw.githubusercontent.com/kpab/three-readme/main/assets/torusknot.svg" target="_blank" rel="noopener">
         <div class="corners"><span></span><span></span><span></span><span></span></div>
         <div class="screen"><img alt="torusknot" src="https://raw.githubusercontent.com/kpab/three-readme/main/assets/torusknot.svg"></div>
         <div class="meta"><span class="nm">torusknot</span><span class="fig">FIG.03</span></div>
       </a>
-      <a class="plate framed" href="https://raw.githubusercontent.com/kpab/three-readme/main/assets/icosahedron.svg" target="_blank" rel="noopener">
+      <a class="plate framed reveal" href="https://raw.githubusercontent.com/kpab/three-readme/main/assets/icosahedron.svg" target="_blank" rel="noopener">
         <div class="corners"><span></span><span></span><span></span><span></span></div>
         <div class="screen"><img alt="icosahedron" src="https://raw.githubusercontent.com/kpab/three-readme/main/assets/icosahedron.svg"></div>
         <div class="meta"><span class="nm">icosahedron</span><span class="fig">FIG.04</span></div>
       </a>
-      <a class="plate framed" href="https://raw.githubusercontent.com/kpab/three-readme/main/assets/torus.svg" target="_blank" rel="noopener">
+      <a class="plate framed reveal" href="https://raw.githubusercontent.com/kpab/three-readme/main/assets/torus.svg" target="_blank" rel="noopener">
         <div class="corners"><span></span><span></span><span></span><span></span></div>
         <div class="screen"><img alt="torus" src="https://raw.githubusercontent.com/kpab/three-readme/main/assets/torus.svg"></div>
         <div class="meta"><span class="nm">torus</span><span class="fig">FIG.05</span></div>
       </a>
-      <a class="plate framed" href="https://raw.githubusercontent.com/kpab/three-readme/main/assets/teapot.svg" target="_blank" rel="noopener">
+      <a class="plate framed reveal" href="https://raw.githubusercontent.com/kpab/three-readme/main/assets/teapot.svg" target="_blank" rel="noopener">
         <div class="corners"><span></span><span></span><span></span><span></span></div>
         <div class="screen"><img alt="teapot" src="https://raw.githubusercontent.com/kpab/three-readme/main/assets/teapot.svg"></div>
         <div class="meta"><span class="nm">teapot</span><span class="fig">FIG.06</span></div>
@@ -395,9 +426,9 @@
       <p class="sec-sub">jsdom + Three's SVGRenderer, baked into one optimized file.</p>
     </div>
     <div class="steps">
-      <div class="step"><div class="n">STEP 01</div><h3>Render frames</h3><p>jsdom injects a DOM; Three's <code>SVGRenderer</code> turns each frame into vector SVG.</p></div>
-      <div class="step"><div class="n">STEP 02</div><h3>Flipbook</h3><p>N frames are encoded into one SVG via one-hot opacity <code>&lt;animate&gt;</code> (SMIL) elements.</p></div>
-      <div class="step"><div class="n">STEP 03</div><h3>Commit</h3><p>SVGO optimizes the result, and the Action commits it back into <code>assets/</code> — like platane/snk.</p></div>
+      <div class="step reveal"><div class="n">STEP 01</div><h3>Render frames</h3><p>jsdom injects a DOM; Three's <code>SVGRenderer</code> turns each frame into vector SVG.</p></div>
+      <div class="step reveal"><div class="n">STEP 02</div><h3>Flipbook</h3><p>N frames are encoded into one SVG via one-hot opacity <code>&lt;animate&gt;</code> (SMIL) elements.</p></div>
+      <div class="step reveal"><div class="n">STEP 03</div><h3>Commit</h3><p>SVGO optimizes the result, and the Action commits it back into <code>assets/</code> — like platane/snk.</p></div>
     </div>
   </section>
 
@@ -454,6 +485,23 @@
         });
       });
     });
+  })();
+
+  // Scroll-triggered reveals — each plate/step draws itself in once on entry.
+  (function () {
+    var items = document.querySelectorAll(".reveal");
+    if (!items.length) return;
+    var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce || !("IntersectionObserver" in window)) {
+      items.forEach(function (el) { el.classList.add("in"); });
+      return;
+    }
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); }
+      });
+    }, { threshold: 0.15, rootMargin: "0px 0px -8% 0px" });
+    items.forEach(function (el) { io.observe(el); });
   })();
 </script>
 </body>
