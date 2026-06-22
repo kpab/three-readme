@@ -231,6 +231,33 @@
   .plate .meta .nm .flag { color: var(--amber); }
   .plate .meta .fig { color: var(--muted); font-size: 0.68rem; letter-spacing: 0.1em; }
 
+  /* viewport canvas toggle — proves transparent SVGs sit on any theme */
+  .canvas-toggle {
+    display: inline-flex; align-self: center; margin-left: auto;
+    border: 1px solid var(--line); border-radius: 2px; overflow: hidden;
+    font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.1em;
+  }
+  .canvas-toggle button {
+    appearance: none; border: 0; cursor: pointer; font: inherit;
+    padding: 7px 14px; background: transparent; color: var(--muted);
+    transition: color .15s ease, background .15s ease;
+  }
+  .canvas-toggle button + button { border-left: 1px solid var(--line); }
+  .canvas-toggle button[aria-pressed="true"] { background: var(--cyan); color: var(--ink); }
+  @media (prefers-color-scheme: light) {
+    .canvas-toggle button[aria-pressed="true"] { color: #fff; }
+  }
+  /* forced viewport canvases, independent of the page theme */
+  .gallery[data-canvas="dark"]  .plate .screen { background-color: #0a1020; }
+  .gallery[data-canvas="light"] .plate .screen { background-color: #f2efe6; }
+  .gallery[data-canvas] .plate .screen {
+    background-image:
+      linear-gradient(rgba(128,128,128,0.12) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(128,128,128,0.12) 1px, transparent 1px);
+    background-size: 20% 20%, 20% 20%;
+    transition: background-color .25s ease;
+  }
+
   /* ---- how it works ---- */
   .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 0; border: 1px solid var(--line); border-radius: 2px; overflow: hidden; }
   .step { padding: 26px 24px; border-right: 1px solid var(--line); background: var(--panel); }
@@ -322,8 +349,12 @@
       <span class="sec-no">01</span>
       <h2>Scene gallery</h2>
       <p class="sec-sub">Each plate is a single self-contained SVG, animated with SMIL — no JS, no GIF. Transparent backgrounds adapt to light and dark themes.</p>
+      <div class="canvas-toggle" role="group" aria-label="Preview canvas background">
+        <button type="button" data-canvas="dark" aria-pressed="true">DARK</button>
+        <button type="button" data-canvas="light" aria-pressed="false">LIGHT</button>
+      </div>
     </div>
-    <div class="gallery">
+    <div class="gallery" id="gallery-grid" data-canvas="dark">
       <a class="plate framed" href="https://raw.githubusercontent.com/kpab/three-readme/main/assets/crystal.svg" target="_blank" rel="noopener">
         <div class="corners"><span></span><span></span><span></span><span></span></div>
         <div class="screen"><img alt="crystal" src="https://raw.githubusercontent.com/kpab/three-readme/main/assets/crystal.svg"></div>
@@ -406,5 +437,24 @@
     <span>MIT LICENSE · MADE WITH THREE-README</span>
   </div>
 </footer>
+
+<script>
+  // Viewport canvas toggle: flip every gallery plate between a dark and a
+  // light backing so visitors can see the transparent SVGs adapt to either.
+  (function () {
+    var grid = document.getElementById("gallery-grid");
+    var buttons = document.querySelectorAll(".canvas-toggle button");
+    if (!grid || !buttons.length) return;
+    buttons.forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var mode = btn.getAttribute("data-canvas");
+        grid.setAttribute("data-canvas", mode);
+        buttons.forEach(function (b) {
+          b.setAttribute("aria-pressed", String(b === btn));
+        });
+      });
+    });
+  })();
+</script>
 </body>
 </html>
