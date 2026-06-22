@@ -9,141 +9,500 @@
 <meta property="og:description" content="Bake Three.js scenes into animated SVGs for your README, via a CLI and GitHub Action.">
 <meta property="og:image" content="https://raw.githubusercontent.com/kpab/three-readme/main/assets/og.png">
 <meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
+  /* ============================================================
+     three-readme — engineering blueprint
+     dark = ink-navy drafting table · light = blue-line whiteprint
+     ============================================================ */
   :root {
-    --bg: #0d1117;
-    --panel: #161b22;
-    --border: #21262d;
-    --fg: #e6edf3;
-    --muted: #8b949e;
-    --purple: #a371f7;
-    --green: #39d353;
-    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    --ink:        #070c18;
+    --panel:      #0c1426;
+    --panel-2:    #0a1120;
+    --fg:         #e3ebfb;
+    --muted:      #8493b4;
+    --cyan:       #5cc8e8;   /* draftsman cyan */
+    --amber:      #ffb454;   /* signal amber   */
+    --line:       rgba(140,175,225,0.20);
+    --line-soft:  rgba(140,175,225,0.10);
+    --grid-fine:  rgba(120,160,220,0.055);
+    --grid-major: rgba(120,160,220,0.10);
+    --glow:       rgba(92,200,232,0.16);
+    --sans: "Archivo", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --ink:        #eef1e7;   /* cream drafting paper */
+      --panel:      #f7f8f1;
+      --panel-2:    #f1f3ea;
+      --fg:         #16243f;
+      --muted:      #5a6a87;
+      --cyan:       #1f7fa6;
+      --amber:      #c87a13;
+      --line:       rgba(40,80,130,0.28);
+      --line-soft:  rgba(40,80,130,0.14);
+      --grid-fine:  rgba(40,90,150,0.06);
+      --grid-major: rgba(40,90,150,0.12);
+      --glow:       rgba(31,127,166,0.12);
+    }
+  }
+
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; }
   body {
-    background: var(--bg);
+    background: var(--ink);
     color: var(--fg);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-    line-height: 1.6;
+    font-family: var(--sans);
+    line-height: 1.65;
     -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+    /* layered graph-paper grid + drafting-table glow */
     background-image:
-      radial-gradient(circle at 50% -20%, rgba(163,113,247,0.15), transparent 55%);
+      radial-gradient(ellipse 90% 60% at 50% -10%, var(--glow), transparent 60%),
+      linear-gradient(var(--grid-major) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-major) 1px, transparent 1px),
+      linear-gradient(var(--grid-fine) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-fine) 1px, transparent 1px);
+    background-size:
+      100% 100%,
+      120px 120px, 120px 120px,
+      24px 24px, 24px 24px;
+    background-position: 0 0, -1px -1px, -1px -1px, -1px -1px, -1px -1px;
   }
-  a { color: var(--purple); text-decoration: none; }
-  a:hover { text-decoration: underline; }
-  .wrap { max-width: 960px; margin: 0 auto; padding: 0 24px; }
+  a { color: var(--cyan); text-decoration: none; }
+  a:hover { color: var(--amber); }
 
-  header { text-align: center; padding: 72px 0 40px; }
-  .hero-art { width: 240px; height: 240px; filter: drop-shadow(0 8px 40px rgba(163,113,247,0.35)); }
-  h1 {
-    font-size: clamp(2.4rem, 7vw, 3.6rem);
-    letter-spacing: -0.03em;
-    margin: 8px 0 12px;
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 28px; }
+
+  /* ---- shared blueprint primitives ---- */
+  .kicker {
     font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.34em;
+    text-transform: uppercase;
+    color: var(--cyan);
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
   }
-  .tagline { font-size: clamp(1.05rem, 2.6vw, 1.35rem); color: var(--muted); max-width: 620px; margin: 0 auto 28px; }
-  .cta { display: inline-flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+  .kicker::before {
+    content: "";
+    width: 26px; height: 1px;
+    background: var(--cyan);
+    display: inline-block;
+  }
+
+  /* corner crop-marks for any framed box */
+  .framed { position: relative; }
+  .framed::before, .framed::after,
+  .framed > .corners { pointer-events: none; }
+  .corners { position: absolute; inset: 0; }
+  .corners span {
+    position: absolute; width: 11px; height: 11px;
+    border: 1px solid var(--cyan);
+  }
+  .corners span:nth-child(1) { top: -1px; left: -1px; border-right: 0; border-bottom: 0; }
+  .corners span:nth-child(2) { top: -1px; right: -1px; border-left: 0; border-bottom: 0; }
+  .corners span:nth-child(3) { bottom: -1px; left: -1px; border-right: 0; border-top: 0; }
+  .corners span:nth-child(4) { bottom: -1px; right: -1px; border-left: 0; border-top: 0; }
+
+  /* ============ MASTHEAD ============ */
+  .topbar {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 20px 0 18px;
+    border-bottom: 1px solid var(--line);
+    font-family: var(--mono); font-size: 0.74rem; color: var(--muted);
+    letter-spacing: 0.08em;
+  }
+  .topbar .brand { color: var(--fg); font-weight: 700; letter-spacing: 0.02em; }
+  .topbar .brand b { color: var(--amber); }
+  .topbar .rev { display: flex; gap: 18px; }
+  .topbar .rev span:last-child { color: var(--cyan); }
+
+  header { padding: 76px 0 30px; position: relative; }
+  .hero-grid {
+    display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 48px; align-items: center;
+  }
+  h1 {
+    font-family: var(--sans);
+    font-weight: 900;
+    font-size: clamp(2.9rem, 7.5vw, 5rem);
+    line-height: 0.96;
+    letter-spacing: -0.045em;
+    margin: 18px 0 0;
+  }
+  h1 .dim { color: var(--muted); font-weight: 500; }
+  h1 .amber { color: var(--amber); }
+  .tagline {
+    font-size: clamp(1.02rem, 2vw, 1.22rem);
+    color: var(--muted);
+    max-width: 30em;
+    margin: 22px 0 0;
+  }
+  .specline {
+    margin-top: 22px;
+    font-family: var(--mono); font-size: 0.76rem; color: var(--muted);
+    display: flex; flex-wrap: wrap; gap: 8px 18px;
+    letter-spacing: 0.04em;
+  }
+  .specline b { color: var(--cyan); font-weight: 500; }
+
+  .cta { display: inline-flex; gap: 14px; flex-wrap: wrap; margin-top: 30px; }
   .btn {
-    display: inline-flex; align-items: center; gap: 8px;
-    padding: 11px 20px; border-radius: 8px; font-weight: 600; font-size: 0.95rem;
-    border: 1px solid var(--border); transition: transform .12s ease, border-color .12s ease;
+    display: inline-flex; align-items: center; gap: 9px;
+    padding: 12px 22px; font-family: var(--mono); font-weight: 500;
+    font-size: 0.82rem; letter-spacing: 0.05em;
+    border: 1px solid var(--line); border-radius: 2px;
+    color: var(--fg); background: transparent;
+    transition: all .16s ease; position: relative;
   }
-  .btn:hover { text-decoration: none; transform: translateY(-2px); }
-  .btn-primary { background: var(--purple); color: #fff; border-color: var(--purple); }
-  .btn-ghost { background: var(--panel); color: var(--fg); }
-
-  section { padding: 40px 0; }
-  h2 { font-size: 1.5rem; letter-spacing: -0.02em; margin-bottom: 8px; font-family: var(--mono); }
-  .section-sub { color: var(--muted); margin-bottom: 28px; }
-
-  .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; }
-  .tile {
-    background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
-    padding: 16px; text-align: center; transition: border-color .15s ease, transform .15s ease;
+  .btn:hover { transform: translateY(-2px); }
+  .btn-primary {
+    background: var(--amber); color: #1a1206; border-color: var(--amber); font-weight: 700;
   }
-  .tile:hover { border-color: var(--purple); transform: translateY(-3px); }
-  .tile img { width: 100%; height: 150px; object-fit: contain; }
-  .tile .name { font-family: var(--mono); font-size: 0.85rem; color: var(--muted); margin-top: 10px; }
+  .btn-primary:hover { color: #1a1206; box-shadow: 0 6px 22px -8px var(--amber); }
+  .btn-ghost:hover { border-color: var(--cyan); color: var(--cyan); }
 
-  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
-  .step { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
-  .step .n { font-family: var(--mono); color: var(--purple); font-weight: 700; }
-  .step h3 { font-size: 1.05rem; margin: 6px 0; }
-  .step p { color: var(--muted); font-size: 0.92rem; }
+  /* hero viewport (the crystal) */
+  .hero-view {
+    aspect-ratio: 1; padding: 18px;
+    border: 1px solid var(--line);
+    background:
+      linear-gradient(var(--line-soft) 1px, transparent 1px) 0 0 / 100% 25%,
+      linear-gradient(90deg, var(--line-soft) 1px, transparent 1px) 0 0 / 25% 100%,
+      var(--panel-2);
+    display: grid; place-items: center;
+  }
+  .hero-view img { width: 86%; height: 86%; object-fit: contain;
+    filter: drop-shadow(0 10px 40px var(--glow)); }
+  .view-tag {
+    position: absolute; left: -1px; bottom: -1px;
+    font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.12em;
+    color: var(--ink); background: var(--cyan); padding: 3px 9px;
+  }
+  @media (prefers-color-scheme: light) { .view-tag { color: #fff; } }
 
+  /* ============ SECTIONS ============ */
+  section { padding: 64px 0; border-top: 1px solid var(--line-soft); }
+  .sec-head { display: flex; align-items: baseline; gap: 16px; margin-bottom: 34px; flex-wrap: wrap; }
+  .sec-head h2 {
+    font-family: var(--sans); font-weight: 800; font-size: clamp(1.6rem, 3.4vw, 2.3rem);
+    letter-spacing: -0.03em;
+  }
+  .sec-no { font-family: var(--mono); font-size: 0.8rem; color: var(--amber); letter-spacing: 0.1em; }
+  .sec-sub { color: var(--muted); max-width: 48em; margin-left: auto; font-size: 0.92rem; }
+
+  /* ---- gallery of viewports ---- */
+  .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(228px, 1fr)); gap: 22px; }
+  .plate {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 2px; overflow: hidden;
+    transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+  }
+  .plate:hover { transform: translateY(-4px); border-color: var(--cyan);
+    box-shadow: 0 18px 44px -22px var(--glow); }
+  .plate .screen {
+    position: relative; aspect-ratio: 4 / 3; display: grid; place-items: center;
+    background:
+      linear-gradient(var(--line-soft) 1px, transparent 1px) 0 0 / 100% 20%,
+      linear-gradient(90deg, var(--line-soft) 1px, transparent 1px) 0 0 / 20% 100%,
+      var(--panel-2);
+  }
+  .plate .screen img { width: 74%; height: 74%; object-fit: contain; }
+  .plate:hover .screen img { animation: none; }
+  /* reticle crosshair on hover */
+  .plate .screen::after {
+    content: ""; position: absolute; inset: 0; opacity: 0; transition: opacity .2s;
+    background:
+      linear-gradient(var(--cyan), var(--cyan)) 50% 0 / 1px 100% no-repeat,
+      linear-gradient(var(--cyan), var(--cyan)) 0 50% / 100% 1px no-repeat;
+    mix-blend-mode: screen;
+  }
+  .plate:hover .screen::after { opacity: 0.22; }
+  .plate .meta {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 11px 14px; border-top: 1px solid var(--line);
+    font-family: var(--mono); font-size: 0.78rem;
+  }
+  .plate .meta .nm { color: var(--fg); font-weight: 500; }
+  .plate .meta .nm .flag { color: var(--amber); }
+  .plate .meta .fig { color: var(--muted); font-size: 0.68rem; letter-spacing: 0.1em; }
+
+  /* viewport canvas toggle — proves transparent SVGs sit on any theme */
+  .canvas-toggle {
+    display: inline-flex; align-self: center; margin-left: auto;
+    border: 1px solid var(--line); border-radius: 2px; overflow: hidden;
+    font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.1em;
+  }
+  .canvas-toggle button {
+    appearance: none; border: 0; cursor: pointer; font: inherit;
+    padding: 7px 14px; background: transparent; color: var(--muted);
+    transition: color .15s ease, background .15s ease;
+  }
+  .canvas-toggle button + button { border-left: 1px solid var(--line); }
+  .canvas-toggle button[aria-pressed="true"] { background: var(--cyan); color: var(--ink); }
+  @media (prefers-color-scheme: light) {
+    .canvas-toggle button[aria-pressed="true"] { color: #fff; }
+  }
+  /* forced viewport canvases, independent of the page theme */
+  .gallery[data-canvas="dark"]  .plate .screen { background-color: #0a1020; }
+  .gallery[data-canvas="light"] .plate .screen { background-color: #f2efe6; }
+  .gallery[data-canvas] .plate .screen {
+    background-image:
+      linear-gradient(rgba(128,128,128,0.12) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(128,128,128,0.12) 1px, transparent 1px);
+    background-size: 20% 20%, 20% 20%;
+    transition: background-color .25s ease;
+  }
+
+  /* ---- how it works ---- */
+  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 0; border: 1px solid var(--line); border-radius: 2px; overflow: hidden; }
+  .step { padding: 26px 24px; border-right: 1px solid var(--line); background: var(--panel); }
+  .step:last-child { border-right: 0; }
+  .step .n { font-family: var(--mono); font-size: 0.78rem; color: var(--cyan); letter-spacing: 0.14em; }
+  .step h3 { font-size: 1.12rem; font-weight: 800; margin: 12px 0 8px; letter-spacing: -0.01em; }
+  .step p { color: var(--muted); font-size: 0.9rem; }
+  .step code { font-family: var(--mono); font-size: 0.84em; color: var(--amber); }
+
+  /* ---- quickstart ---- */
+  .qs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; }
   pre {
-    background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
-    padding: 20px; overflow-x: auto; font-family: var(--mono); font-size: 0.85rem; line-height: 1.7;
+    background: var(--panel-2); border: 1px solid var(--line); border-radius: 2px;
+    padding: 22px; overflow-x: auto; font-family: var(--mono); font-size: 0.82rem; line-height: 1.8;
+    position: relative;
   }
-  pre .k { color: var(--purple); }
-  pre .s { color: var(--green); }
+  pre .label {
+    position: absolute; top: -1px; right: -1px;
+    font-size: 0.64rem; letter-spacing: 0.12em; color: var(--muted);
+    border-left: 1px solid var(--line); border-bottom: 1px solid var(--line);
+    padding: 4px 10px;
+  }
+  pre .k { color: var(--cyan); }
+  pre .s { color: var(--amber); }
   pre .c { color: var(--muted); }
+  .qs-note { color: var(--muted); font-size: 0.92rem; }
+  .qs-note code { font-family: var(--mono); font-size: 0.84em; color: var(--amber); background: var(--panel); padding: 1px 6px; border-radius: 2px; }
+  .qs-note h3 { font-family: var(--sans); font-weight: 800; font-size: 1.15rem; color: var(--fg); margin-bottom: 10px; letter-spacing: -0.01em; }
 
-  footer { text-align: center; padding: 56px 0 72px; color: var(--muted); font-size: 0.9rem; border-top: 1px solid var(--border); margin-top: 32px; }
+  /* ---- footer ---- */
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 30px 0; margin-top: 20px;
+    font-family: var(--mono); font-size: 0.74rem; color: var(--muted);
+    letter-spacing: 0.06em;
+  }
+  footer .wrap { display: flex; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
   footer a { color: var(--muted); }
+  footer a:hover { color: var(--cyan); }
+
+  /* ---- motion: plotter-style reveals ---- */
+  @keyframes draw-in {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  /* hero draws itself in on load, like a plotter laying down lines */
+  .hero-grid > div > * { animation: draw-in .7s cubic-bezier(.2,.7,.2,1) both; }
+  .hero-grid .kicker   { animation-delay: .05s; }
+  .hero-grid h1        { animation-delay: .14s; }
+  .hero-grid .tagline  { animation-delay: .26s; }
+  .hero-grid .specline { animation-delay: .36s; }
+  .hero-grid .cta      { animation-delay: .46s; }
+  .hero-view { animation: draw-in .9s cubic-bezier(.2,.7,.2,1) both; animation-delay: .3s; }
+
+  /* scroll-triggered reveal for sections/plates */
+  .reveal { opacity: 0; transform: translateY(16px); }
+  .reveal.in { animation: draw-in .65s cubic-bezier(.2,.7,.2,1) forwards; }
+  .gallery .reveal.in:nth-child(1) { animation-delay: .00s; }
+  .gallery .reveal.in:nth-child(2) { animation-delay: .06s; }
+  .gallery .reveal.in:nth-child(3) { animation-delay: .12s; }
+  .gallery .reveal.in:nth-child(4) { animation-delay: .18s; }
+  .gallery .reveal.in:nth-child(5) { animation-delay: .24s; }
+  .gallery .reveal.in:nth-child(6) { animation-delay: .30s; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero-grid > div > *, .hero-view { animation: none; }
+    .reveal { opacity: 1; transform: none; }
+    .reveal.in { animation: none; }
+    html { scroll-behavior: auto; }
+  }
+
+  /* ---- responsive ---- */
+  @media (max-width: 760px) {
+    .hero-grid { grid-template-columns: 1fr; gap: 36px; }
+    .hero-view { max-width: 320px; margin: 0 auto; }
+    .qs-grid { grid-template-columns: 1fr; }
+    .sec-sub { margin-left: 0; }
+  }
 </style>
 </head>
 <body>
 <div class="wrap">
+
+  <div class="topbar">
+    <span class="brand">three<b>·</b>readme</span>
+    <span class="rev">
+      <span>SHEET 1/1</span>
+      <span>SCALE 1:1</span>
+      <span>REV — SMIL</span>
+    </span>
+  </div>
+
   <header>
-    <img class="hero-art" alt="rotating low-poly crystal" src="https://raw.githubusercontent.com/kpab/three-readme/main/assets/crystal.svg">
-    <h1>three-readme</h1>
-    <p class="tagline">Bake Three.js scenes into animated SVGs (SMIL) and embed them in your README — driven by a CLI and a reusable GitHub Action.</p>
-    <div class="cta">
-      <a class="btn btn-primary" href="https://github.com/kpab/three-readme" target="_blank" rel="noopener">★ Star on GitHub</a>
-      <a class="btn btn-ghost" href="#quickstart">Get started</a>
+    <div class="hero-grid">
+      <div>
+        <span class="kicker">Vector scene compiler</span>
+        <h1>Three.js scenes,<br><span class="dim">baked into</span> <span class="amber">animated SVG</span>.</h1>
+        <p class="tagline">A CLI and reusable GitHub Action that renders Three.js scenes through <code>SVGRenderer</code> and encodes them as one self-contained, SMIL-animated SVG — drop it straight into your README.</p>
+        <div class="specline">
+          <span>FORMAT <b>SVG · SMIL</b></span>
+          <span>RUNTIME <b>0 JS</b></span>
+          <span>FRAMES <b>24</b></span>
+          <span>THEME <b>light + dark</b></span>
+        </div>
+        <div class="cta">
+          <a class="btn btn-primary" href="https://github.com/kpab/three-readme" target="_blank" rel="noopener">★ Star on GitHub</a>
+          <a class="btn btn-ghost" href="#quickstart">$ get started</a>
+        </div>
+      </div>
+      <div class="hero-view framed">
+        <div class="corners"><span></span><span></span><span></span><span></span></div>
+        <img alt="rotating low-poly crystal" src="https://raw.githubusercontent.com/kpab/three-readme/main/assets/crystal.svg">
+        <span class="view-tag">FIG.00 · crystal</span>
+      </div>
     </div>
   </header>
 
-  <section>
-    <h2>Scene gallery</h2>
-    <p class="section-sub">Every scene below is a single self-contained SVG, animated with SMIL — no JS, no GIF. Transparent backgrounds adapt to light and dark themes.</p>
-    <div class="gallery">
-      <div class="tile"><img alt="crystal" src="https://raw.githubusercontent.com/kpab/three-readme/main/assets/crystal.svg"><div class="name">crystal</div></div>
-      <div class="tile"><img alt="text" src="https://raw.githubusercontent.com/kpab/three-readme/main/assets/text.svg"><div class="name">text · --text</div></div>
-      <div class="tile"><img alt="teapot" src="https://raw.githubusercontent.com/kpab/three-readme/main/assets/teapot.svg"><div class="name">teapot</div></div>
-      <div class="tile"><img alt="torusknot" src="https://raw.githubusercontent.com/kpab/three-readme/main/assets/torusknot.svg"><div class="name">torusknot</div></div>
-      <div class="tile"><img alt="icosahedron" src="https://raw.githubusercontent.com/kpab/three-readme/main/assets/icosahedron.svg"><div class="name">icosahedron</div></div>
-      <div class="tile"><img alt="torus" src="https://raw.githubusercontent.com/kpab/three-readme/main/assets/torus.svg"><div class="name">torus</div></div>
+  <section id="gallery">
+    <div class="sec-head">
+      <span class="sec-no">01</span>
+      <h2>Scene gallery</h2>
+      <p class="sec-sub">Each plate is a single self-contained SVG, animated with SMIL — no JS, no GIF. Transparent backgrounds adapt to light and dark themes.</p>
+      <div class="canvas-toggle" role="group" aria-label="Preview canvas background">
+        <button type="button" data-canvas="dark" aria-pressed="true">DARK</button>
+        <button type="button" data-canvas="light" aria-pressed="false">LIGHT</button>
+      </div>
+    </div>
+    <div class="gallery" id="gallery-grid" data-canvas="dark">
+      <a class="plate framed reveal" href="https://raw.githubusercontent.com/kpab/three-readme/main/assets/crystal.svg" target="_blank" rel="noopener">
+        <div class="corners"><span></span><span></span><span></span><span></span></div>
+        <div class="screen"><img alt="crystal" src="https://raw.githubusercontent.com/kpab/three-readme/main/assets/crystal.svg"></div>
+        <div class="meta"><span class="nm">crystal</span><span class="fig">FIG.01</span></div>
+      </a>
+      <a class="plate framed reveal" href="https://raw.githubusercontent.com/kpab/three-readme/main/assets/text.svg" target="_blank" rel="noopener">
+        <div class="corners"><span></span><span></span><span></span><span></span></div>
+        <div class="screen"><img alt="text" src="https://raw.githubusercontent.com/kpab/three-readme/main/assets/text.svg"></div>
+        <div class="meta"><span class="nm">text <span class="flag">--text</span></span><span class="fig">FIG.02</span></div>
+      </a>
+      <a class="plate framed reveal" href="https://raw.githubusercontent.com/kpab/three-readme/main/assets/torusknot.svg" target="_blank" rel="noopener">
+        <div class="corners"><span></span><span></span><span></span><span></span></div>
+        <div class="screen"><img alt="torusknot" src="https://raw.githubusercontent.com/kpab/three-readme/main/assets/torusknot.svg"></div>
+        <div class="meta"><span class="nm">torusknot</span><span class="fig">FIG.03</span></div>
+      </a>
+      <a class="plate framed reveal" href="https://raw.githubusercontent.com/kpab/three-readme/main/assets/icosahedron.svg" target="_blank" rel="noopener">
+        <div class="corners"><span></span><span></span><span></span><span></span></div>
+        <div class="screen"><img alt="icosahedron" src="https://raw.githubusercontent.com/kpab/three-readme/main/assets/icosahedron.svg"></div>
+        <div class="meta"><span class="nm">icosahedron</span><span class="fig">FIG.04</span></div>
+      </a>
+      <a class="plate framed reveal" href="https://raw.githubusercontent.com/kpab/three-readme/main/assets/torus.svg" target="_blank" rel="noopener">
+        <div class="corners"><span></span><span></span><span></span><span></span></div>
+        <div class="screen"><img alt="torus" src="https://raw.githubusercontent.com/kpab/three-readme/main/assets/torus.svg"></div>
+        <div class="meta"><span class="nm">torus</span><span class="fig">FIG.05</span></div>
+      </a>
+      <a class="plate framed reveal" href="https://raw.githubusercontent.com/kpab/three-readme/main/assets/teapot.svg" target="_blank" rel="noopener">
+        <div class="corners"><span></span><span></span><span></span><span></span></div>
+        <div class="screen"><img alt="teapot" src="https://raw.githubusercontent.com/kpab/three-readme/main/assets/teapot.svg"></div>
+        <div class="meta"><span class="nm">teapot</span><span class="fig">FIG.06</span></div>
+      </a>
     </div>
   </section>
 
-  <section>
-    <h2>How it works</h2>
-    <p class="section-sub">jsdom + Three's SVGRenderer, baked into one optimized file.</p>
+  <section id="how">
+    <div class="sec-head">
+      <span class="sec-no">02</span>
+      <h2>How it works</h2>
+      <p class="sec-sub">jsdom + Three's SVGRenderer, baked into one optimized file.</p>
+    </div>
     <div class="steps">
-      <div class="step"><div class="n">01</div><h3>Render frames</h3><p>jsdom injects a DOM; Three's <code>SVGRenderer</code> turns each frame into vector SVG.</p></div>
-      <div class="step"><div class="n">02</div><h3>Flipbook</h3><p>N frames are encoded into one SVG via one-hot opacity <code>&lt;animate&gt;</code> (SMIL) elements.</p></div>
-      <div class="step"><div class="n">03</div><h3>Commit</h3><p>SVGO optimizes the result, and the Action commits it back into <code>assets/</code> — like platane/snk.</p></div>
+      <div class="step reveal"><div class="n">STEP 01</div><h3>Render frames</h3><p>jsdom injects a DOM; Three's <code>SVGRenderer</code> turns each frame into vector SVG.</p></div>
+      <div class="step reveal"><div class="n">STEP 02</div><h3>Flipbook</h3><p>N frames are encoded into one SVG via one-hot opacity <code>&lt;animate&gt;</code> (SMIL) elements.</p></div>
+      <div class="step reveal"><div class="n">STEP 03</div><h3>Commit</h3><p>SVGO optimizes the result, and the Action commits it back into <code>assets/</code> — like platane/snk.</p></div>
     </div>
   </section>
 
   <section id="quickstart">
-    <h2>Quickstart</h2>
-    <p class="section-sub">Add a few lines to a workflow in your own repo. No need to vendor Three.js.</p>
-<pre><span class="c"># .github/workflows/readme-art.yml</span>
+    <div class="sec-head">
+      <span class="sec-no">03</span>
+      <h2>Quickstart</h2>
+      <p class="sec-sub">Add a few lines to a workflow in your own repo. No need to vendor Three.js.</p>
+    </div>
+    <div class="qs-grid">
+<pre><span class="label">readme-art.yml</span><span class="c"># .github/workflows/readme-art.yml</span>
 <span class="k">- uses:</span> kpab/three-readme@v1
   <span class="k">with:</span>
     <span class="k">scene:</span> <span class="s">crystal</span>
-    <span class="k">color:</span> <span class="s">"#a371f7"</span>
+    <span class="k">color:</span> <span class="s">"#5cc8e8"</span>
     <span class="k">out:</span> <span class="s">assets/crystal.svg</span>
 
 <span class="k">- uses:</span> stefanzweifel/git-auto-commit-action@v5
   <span class="k">with:</span>
     <span class="k">file_pattern:</span> <span class="s">"assets/*.svg"</span></pre>
-    <p class="section-sub" style="margin-top:18px">Then embed it: <code>![](./assets/crystal.svg)</code>. Want your name spinning in 3D? Use the <code>text</code> scene with <code>--text "YOUR NAME"</code>.</p>
-    <div class="cta" style="justify-content:flex-start">
-      <a class="btn btn-primary" href="https://github.com/kpab/three-readme#readme" target="_blank" rel="noopener">Read the docs</a>
+      <div class="qs-note">
+        <h3>Then embed it</h3>
+        <p>Reference the generated file like any image: <code>![](./assets/crystal.svg)</code>. Because backgrounds are transparent, the same file sits cleanly on light and dark GitHub themes.</p>
+        <p style="margin-top:14px">Want your name spinning in 3D? Use the <code>text</code> scene with <code>--text "YOUR NAME"</code>.</p>
+        <div class="cta" style="margin-top:24px">
+          <a class="btn btn-ghost" href="https://github.com/kpab/three-readme#readme" target="_blank" rel="noopener">Read the docs →</a>
+        </div>
+      </div>
     </div>
   </section>
+
 </div>
 
 <footer>
   <div class="wrap">
-    <a href="https://github.com/kpab/three-readme" target="_blank" rel="noopener">github.com/kpab/three-readme</a> · MIT License · made with three-readme
+    <span><a href="https://github.com/kpab/three-readme" target="_blank" rel="noopener">github.com/kpab/three-readme</a></span>
+    <span>MIT LICENSE · MADE WITH THREE-README</span>
   </div>
 </footer>
+
+<script>
+  // Viewport canvas toggle: flip every gallery plate between a dark and a
+  // light backing so visitors can see the transparent SVGs adapt to either.
+  (function () {
+    var grid = document.getElementById("gallery-grid");
+    var buttons = document.querySelectorAll(".canvas-toggle button");
+    if (!grid || !buttons.length) return;
+    buttons.forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var mode = btn.getAttribute("data-canvas");
+        grid.setAttribute("data-canvas", mode);
+        buttons.forEach(function (b) {
+          b.setAttribute("aria-pressed", String(b === btn));
+        });
+      });
+    });
+  })();
+
+  // Scroll-triggered reveals — each plate/step draws itself in once on entry.
+  (function () {
+    var items = document.querySelectorAll(".reveal");
+    if (!items.length) return;
+    var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce || !("IntersectionObserver" in window)) {
+      items.forEach(function (el) { el.classList.add("in"); });
+      return;
+    }
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); }
+      });
+    }, { threshold: 0.15, rootMargin: "0px 0px -8% 0px" });
+    items.forEach(function (el) { io.observe(el); });
+  })();
+</script>
 </body>
 </html>
