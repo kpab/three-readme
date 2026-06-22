@@ -32,6 +32,10 @@ jobs:
 
       - run: npm run smoke
 
+      - run: npm run render -- --scene crystal --frames 24 --fps 12 --bg "#0d1117" --color "#a371f7" --out assets/crystal.svg
+
+      - run: npm run render -- --scene text --frames 16 --fps 12 --bg "#0d1117" --color "#39d353" --text "HELLO" --out assets/text.svg
+
       - run: npm run render -- --scene torusknot --frames 24 --fps 12 --bg "#0d1117" --color "#39d353" --out assets/torusknot.svg
 
       - run: npm run render -- --scene teapot --frames 16 --fps 12 --bg "#0d1117" --color "#ffa657" --out assets/teapot.svg

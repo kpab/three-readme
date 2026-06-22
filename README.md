@@ -4,11 +4,16 @@ A CLI / GitHub Action that bakes Three.js scenes into animated SVGs (SMIL) for e
 
 ## Demo
 
-<p>
-  <img width="24%" alt="torusknot" src="./assets/torusknot.svg?v=56e0acf3">
-  <img width="24%" alt="icosahedron" src="./assets/icosahedron.svg?v=c242b575">
-  <img width="24%" alt="torus" src="./assets/torus.svg?v=cba3d85c">
-  <img width="24%" alt="teapot" src="./assets/teapot.svg?v=d1a880ed">
+<p align="center">
+  <img width="50%" alt="crystal" src="./assets/crystal.svg?v=a5a0db6a">
+</p>
+
+<p align="center">
+  <img width="19%" alt="text" src="./assets/text.svg?v=ed8cef1b">
+  <img width="19%" alt="torusknot" src="./assets/torusknot.svg?v=56e0acf3">
+  <img width="19%" alt="icosahedron" src="./assets/icosahedron.svg?v=c242b575">
+  <img width="19%" alt="torus" src="./assets/torus.svg?v=cba3d85c">
+  <img width="19%" alt="teapot" src="./assets/teapot.svg?v=d1a880ed">
 </p>
 
 The `assets/*.svg` files don't exist until the GitHub Action runs for the first time. The `?v=<hash>` query is for camo cache-busting and is maintained automatically — the workflow rewrites it to the SVG's content hash, so it changes only when the image changes (see [Embedding in a README](#embedding-in-a-readme)).
@@ -28,7 +33,7 @@ npm run render -- --scene torusknot --frames 24 --bg "#0d1117" --color "#39d353"
 
 | Flag | Default | Description |
 | --- | --- | --- |
-| `--scene` | `torusknot` | Scene name to render (`torusknot` / `icosahedron` / `torus` / `teapot`) |
+| `--scene` | `torusknot` | Scene name to render (`crystal` / `text` / `torusknot` / `icosahedron` / `torus` / `teapot`) |
 | `--frames` | `24` | Number of frames (positive integer) |
 | `--fps` | `12` | Frames per second |
 | `--width` | `480` | SVG width |
@@ -37,7 +42,11 @@ npm run render -- --scene torusknot --frames 24 --bg "#0d1117" --color "#39d353"
 | `--bg` | `none` | Background color. `none` for transparent |
 | `--out` | `out/<scene>.svg` | Output path |
 
-Unknown `--key value` flags are passed to the scene as `params`. `--color` is also consumed by the scene via `params`.
+Unknown `--key value` flags are passed to the scene as `params`. `--color` is also consumed by the scene via `params`. For example, the `text` scene reads `--text` to render arbitrary 3D text:
+
+```bash
+npm run render -- --scene text --text "YOUR NAME" --color "#39d353" --out assets/text.svg
+```
 
 ## Adding a scene
 
@@ -45,7 +54,7 @@ Unknown `--key value` flags are passed to the scene as `params`. `--color` is al
 2. Import the scene in `src/scenes/index.ts` and register it in `sceneRegistry`.
 3. Generate and verify with `npm run render -- --scene <name> --out assets/<name>.svg`.
 
-`src/scenes/torusknot.ts` / `src/scenes/icosahedron.ts` / `src/scenes/torus.ts` / `src/scenes/teapot.ts` are reference implementations.
+`src/scenes/crystal.ts` (shaded low-poly hero), `src/scenes/text.ts` (3D text from a bundled font), `src/scenes/torusknot.ts`, `src/scenes/icosahedron.ts`, `src/scenes/torus.ts`, and `src/scenes/teapot.ts` are reference implementations.
 
 ## GitHub Action
 
@@ -85,7 +94,7 @@ jobs:
 
 | Input | Default | Description |
 | --- | --- | --- |
-| `scene` | `torusknot` | Scene name (`torusknot` / `icosahedron` / `torus`) |
+| `scene` | `torusknot` | Scene name (`crystal` / `text` / `torusknot` / `icosahedron` / `torus` / `teapot`) |
 | `frames` | `24` | Number of frames |
 | `fps` | `12` | Frames per second |
 | `width` | `480` | SVG width |
