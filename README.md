@@ -2,6 +2,8 @@
 
 A CLI / GitHub Action that bakes Three.js scenes into animated SVGs (SMIL) for embedding in your README. Like platane/snk, it commits the generated artifacts back into the repository.
 
+**[→ Live gallery](https://kpab.github.io/three-readme/)** — see every scene animating, plus a copy-paste quickstart.
+
 ## Demo
 
 <p align="center">
