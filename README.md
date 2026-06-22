@@ -8,7 +8,7 @@ A CLI / GitHub Action that bakes Three.js scenes into animated SVGs (SMIL) for e
   <img width="24%" alt="torusknot" src="./assets/torusknot.svg?v=56e0acf3">
   <img width="24%" alt="icosahedron" src="./assets/icosahedron.svg?v=c242b575">
   <img width="24%" alt="torus" src="./assets/torus.svg?v=cba3d85c">
-  <img width="24%" alt="teapot" src="./assets/teapot.svg?v=1">
+  <img width="24%" alt="teapot" src="./assets/teapot.svg?v=d1a880ed">
 </p>
 
 The `assets/*.svg` files don't exist until the GitHub Action runs for the first time. The `?v=<hash>` query is for camo cache-busting and is maintained automatically — the workflow rewrites it to the SVG's content hash, so it changes only when the image changes (see [Embedding in a README](#embedding-in-a-readme)).
