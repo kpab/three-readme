@@ -34,6 +34,8 @@ jobs:
 
       - run: npm run render -- --scene torusknot --frames 24 --fps 12 --bg "#0d1117" --color "#39d353" --out assets/torusknot.svg
 
+      - run: npm run render -- --scene teapot --frames 16 --fps 12 --bg "#0d1117" --color "#ffa657" --out assets/teapot.svg
+
       - run: npm run render -- --scene icosahedron --frames 24 --fps 12 --bg "#0d1117" --color "#58a6ff" --out assets/icosahedron.svg
 
       - run: npm run render -- --scene torus --frames 24 --fps 12 --bg "#0d1117" --color "#f778ba" --out assets/torus.svg
